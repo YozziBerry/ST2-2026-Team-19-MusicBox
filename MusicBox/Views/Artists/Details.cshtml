@@ -1,0 +1,44 @@
+﻿@model IEnumerable<MusicBox.Models.Song>
+
+@{
+    ViewData["Title"] = "Artist Details";
+    var artistName = Model.FirstOrDefault()?.Artist;
+}
+
+<h1>@artistName</h1>
+
+<h4>Songs by this artist</h4>
+
+@if (!Model.Any())
+{
+    <p>No songs found for this artist.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Genre</th>
+                <th>Release Year</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var song in Model)
+            {
+                <tr>
+                    <td>@song.Title</td>
+                    <td>@song.Genre</td>
+                    <td>@song.ReleaseYear</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<a asp-controller="Artists"
+   asp-action="Index"
+   class="btn btn-secondary">
+    Back to Artists
+</a>
+

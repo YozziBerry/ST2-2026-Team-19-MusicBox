@@ -1,167 +1,135 @@
-
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using MusicBox.Models;
-using MusicBox.Data;
 using MusicBox.Services;
+using MusicBox.Services.Repositories;
 
-public class SongsController : Controller
+namespace MusicBox.Controllers
 {
-    private readonly MusicBoxDbContext _context;
-
-    public SongsController(MusicBoxDbContext context)
+    public class SongsController : Controller
     {
-        _context = context;
-    }
+        private readonly ISongRepository _songRepository;
 
-    // GET: SONGS
-    public async Task<IActionResult> Index(string? searchString)
-    {
-        IQueryable<Song> songs = _context.Songs;
-
-        if (!string.IsNullOrWhiteSpace(searchString))
+        public SongsController(ISongRepository songRepository)
         {
-            songs = songs.Where(s =>
-                s.Title.Contains(searchString) ||
-                s.Artist.Contains(searchString) ||
-                (s.Genre != null &&
-                 s.Genre.Contains(searchString)));
+            _songRepository = songRepository;
         }
 
-        ViewData["CurrentFilter"] = searchString;
-        ViewData["VisitCount"] =
-            MusicBoxVisitCounter.Instance.RegisterVisit();
-
-        return View(await songs.OrderBy(s => s.Title).ToListAsync());
-    }
-
-    // GET: SONGS/Details/5
-    public async Task<IActionResult> Details(int? id)
-    {
-        if (id == null)
+        // READ: Display all songs and filter by title, artist or genre
+        public async Task<IActionResult> Index(string? searchString)
         {
-            return NotFound();
+            var songs = await _songRepository.GetAllAsync();
+
+            if (!string.IsNullOrWhiteSpace(searchString))
+            {
+                songs = songs.Where(s =>
+                    s.Title.Contains(searchString,
+                        StringComparison.OrdinalIgnoreCase) ||
+                    s.Artist.Contains(searchString,
+                        StringComparison.OrdinalIgnoreCase) ||
+                    (s.Genre != null &&
+                     s.Genre.Contains(searchString,
+                        StringComparison.OrdinalIgnoreCase)))
+                    .ToList();
+            }
+
+            ViewData["CurrentFilter"] = searchString;
+
+            // Singleton Design Pattern: use the shared visit counter
+            ViewData["VisitCount"] =
+                MusicBoxVisitCounter.Instance.RegisterVisit();
+
+            return View(songs);
         }
 
-        var song = await _context.Songs
-            .FirstOrDefaultAsync(m => m.Id == id);
-        if (song == null)
+        // READ: Display details of a specific song
+        public async Task<IActionResult> Details(int? id)
         {
-            return NotFound();
-        }
+            if (id == null) return NotFound();
 
-        return View(song);
-    }
+            var song = await _songRepository.GetByIdAsync(id.Value);
 
-    // GET: Songs/Create
-    public IActionResult Create()
-    {
-        return View();
-    }
+            if (song == null) return NotFound();
 
-    // POST: Songs/Create
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(
-        [Bind("Title,Artist,Genre,ReleaseYear")] Song song)
-    {
-        if (!ModelState.IsValid)
-        {
             return View(song);
         }
 
-        _context.Songs.Add(song);
-        await _context.SaveChangesAsync();
-
-        return RedirectToAction(nameof(Index));
-    }
-
-    // GET: SONGS/Edit/5
-    public async Task<IActionResult> Edit(int? id)
-    {
-        if (id == null)
+        // CREATE: Display form
+        public IActionResult Create()
         {
-            return NotFound();
+            return View();
         }
 
-        var song = await _context.Songs.FindAsync(id);
-        if (song == null)
+        // CREATE: Save new song
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(
+            [Bind("Title,Artist,Genre,ReleaseYear")] Song song)
         {
-            return NotFound();
-        }
-        return View(song);
-    }
+            if (!ModelState.IsValid) return View(song);
 
-    // POST: SONGS/Edit/5
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? id, [Bind("Id,Title,Artist,Genre,ReleaseYear")] Song song)
-    {
-        if (id != song.Id)
-        {
-            return NotFound();
-        }
+            await _songRepository.AddAsync(song);
 
-        if (ModelState.IsValid)
-        {
-            try
-            {
-                _context.Update(song);
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!SongExists(song.Id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
             return RedirectToAction(nameof(Index));
         }
-        return View(song);
-    }
 
-    // GET: SONGS/Delete/5
-    public async Task<IActionResult> Delete(int? id)
-    {
-        if (id == null)
+        // UPDATE: Display edit form
+        public async Task<IActionResult> Edit(int? id)
         {
-            return NotFound();
+            if (id == null) return NotFound();
+
+            var song = await _songRepository.GetByIdAsync(id.Value);
+
+            if (song == null) return NotFound();
+
+            return View(song);
         }
 
-        var song = await _context.Songs
-            .FirstOrDefaultAsync(m => m.Id == id);
-        if (song == null)
+        // UPDATE: Save changes
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(
+            int id,
+            [Bind("Id,Title,Artist,Genre,ReleaseYear")] Song song)
         {
-            return NotFound();
+            if (id != song.Id) return NotFound();
+
+            if (!ModelState.IsValid) return View(song);
+
+            var existingSong =
+                await _songRepository.GetByIdAsync(id);
+
+            if (existingSong == null) return NotFound();
+
+            existingSong.Title = song.Title;
+            existingSong.Artist = song.Artist;
+            existingSong.Genre = song.Genre;
+            existingSong.ReleaseYear = song.ReleaseYear;
+
+            await _songRepository.UpdateAsync(existingSong);
+
+            return RedirectToAction(nameof(Index));
         }
 
-        return View(song);
-    }
-
-    // POST: SONGS/Delete/5
-    [HttpPost, ActionName("Delete")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int? id)
-    {
-        var song = await _context.Songs.FindAsync(id);
-        if (song != null)
+        // DELETE: Confirmation page
+        public async Task<IActionResult> Delete(int? id)
         {
-            _context.Songs.Remove(song);
+            if (id == null) return NotFound();
+
+            var song = await _songRepository.GetByIdAsync(id.Value);
+
+            if (song == null) return NotFound();
+
+            return View(song);
         }
 
-        await _context.SaveChangesAsync();
-        return RedirectToAction(nameof(Index));
-    }
+        // DELETE: Remove song
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            await _songRepository.DeleteAsync(id);
 
-    private bool SongExists(int? id)
-    {
-        return _context.Songs.Any(e => e.Id == id);
+            return RedirectToAction(nameof(Index));
+        }
     }
 }

@@ -1,0 +1,29 @@
+﻿@model IEnumerable<string>
+
+@{
+    ViewData["Title"] = "Genres";
+}
+
+<h1>Music Genres</h1>
+
+<p>Explore music by genre.</p>
+
+@if (!Model.Any())
+{
+    <p>No genres found.</p>
+}
+else
+{
+    <div class="list-group">
+        @foreach (var genre in Model)
+        {
+            <a asp-controller="Genres"
+               asp-action="Details"
+               asp-route-id="@genre"
+               class="list-group-item list-group-item-action">
+                @genre
+            </a>
+        }
+    </div>
+}
+

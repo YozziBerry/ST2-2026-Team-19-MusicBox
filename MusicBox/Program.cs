@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using MusicBox.Data;
+using MusicBox.Services.Repositories;
+using MusicBox.Services.Recommendations;
+using MusicBox.Services;
 namespace MusicBox
 
 {
@@ -10,7 +13,16 @@ namespace MusicBox
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+            builder.Services.AddHttpClient<IAIService, GeminiAIService>(
+    client =>
+    {
+        client.Timeout = TimeSpan.FromSeconds(60);
+    }
+);
             builder.Services.AddControllersWithViews();
+            builder.Services.AddScoped<ISongRepository, SongRepository>();
+            builder.Services.AddScoped<GenreRecommendationStrategy>();
+            builder.Services.AddScoped<ArtistRecommendationStrategy>();
             builder.Services.AddDbContext<MusicBoxDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("MusicBoxConnection")));

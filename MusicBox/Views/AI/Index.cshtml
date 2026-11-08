@@ -1,0 +1,82 @@
+﻿@model MusicBox.Models.AIChatViewModel
+
+@{
+    ViewData["Title"] = "MusicBox AI";
+}
+
+<div class="container mt-5">
+
+    <div class="text-center mb-4">
+
+        <h1>🎧 MusicBox AI Assistant</h1>
+
+        <p class="text-muted">
+            Your personal music assistant.
+            Ask questions and discover new music!
+        </p>
+
+    </div>
+
+    <div class="card shadow p-4">
+
+        <form asp-controller="AI"
+              asp-action="Ask"
+              method="post">
+
+            @Html.AntiForgeryToken()
+
+            <div class="mb-3">
+
+                <label asp-for="Question"
+                       class="form-label fw-bold">
+                    Ask MusicBox AI
+                </label>
+
+                <textarea asp-for="Question"
+                          class="form-control"
+                          rows="4"
+                          maxlength="1000"
+                          placeholder="Ask me anything about music...">
+                </textarea>
+
+                <span asp-validation-for="Question"
+                      class="text-danger">
+                </span>
+
+            </div>
+
+            <div asp-validation-summary="ModelOnly"
+                 class="text-danger mb-3">
+            </div>
+
+            <button type="submit"
+                    class="btn btn-primary w-100">
+
+                Ask AI ✨
+
+            </button>
+
+        </form>
+
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Answer))
+    {
+        <div class="card shadow mt-4 p-4">
+
+            <h4>🤖 MusicBox AI Response</h4>
+
+            <hr />
+
+            <div style="white-space: pre-wrap;">@Model.Answer</div>
+
+        </div>
+    }
+
+</div>
+
+@section Scripts {
+
+    <partial name="_ValidationScriptsPartial" />
+
+}

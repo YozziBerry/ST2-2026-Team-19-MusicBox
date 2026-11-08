@@ -1,0 +1,37 @@
+﻿@model IEnumerable<MusicBox.Models.Song>
+
+@{
+    ViewData["Title"] = "Genre Details";
+    var genreName = Model.FirstOrDefault()?.Genre;
+}
+
+<h1>@genreName</h1>
+
+<h4>Songs in this genre</h4>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Artist</th>
+            <th>Release Year</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var song in Model)
+        {
+            <tr>
+                <td>@song.Title</td>
+                <td>@song.Artist</td>
+                <td>@song.ReleaseYear</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a asp-controller="Genres"
+   asp-action="Index"
+   class="btn btn-secondary">
+    Back to Genres
+</a>
+
