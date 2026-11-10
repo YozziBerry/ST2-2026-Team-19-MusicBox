@@ -1,4 +1,5 @@
-﻿using MusicBox.Models;
+﻿
+using MusicBox.Models;
 
 namespace MusicBox.Services.Recommendations
 {
@@ -6,21 +7,25 @@ namespace MusicBox.Services.Recommendations
     // Recommends songs based on the user's preferred artist.
     public class ArtistRecommendationStrategy : IRecommendationStrategy
     {
+        public string Name => "Artist";
+
         public List<Song> Recommend(
             List<Song> songs,
-            string preferredArtist)
+            string preference)
         {
-            if (string.IsNullOrWhiteSpace(preferredArtist))
+            if (string.IsNullOrWhiteSpace(preference))
             {
                 return new List<Song>();
             }
 
             return songs
                 .Where(song =>
+                    !string.IsNullOrWhiteSpace(song.Artist) &&
                     song.Artist.Equals(
-                        preferredArtist,
+                        preference,
                         StringComparison.OrdinalIgnoreCase))
                 .ToList();
         }
     }
 }
+

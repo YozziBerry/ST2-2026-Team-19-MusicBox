@@ -1,4 +1,5 @@
-﻿using MusicBox.Models;
+﻿
+using MusicBox.Models;
 
 namespace MusicBox.Services.Recommendations
 {
@@ -6,22 +7,25 @@ namespace MusicBox.Services.Recommendations
     // Recommends songs based on the user's preferred genre.
     public class GenreRecommendationStrategy : IRecommendationStrategy
     {
+        public string Name => "Genre";
+
         public List<Song> Recommend(
             List<Song> songs,
-            string preferredGenre)
+            string preference)
         {
-            if (string.IsNullOrWhiteSpace(preferredGenre))
+            if (string.IsNullOrWhiteSpace(preference))
             {
                 return new List<Song>();
             }
 
             return songs
                 .Where(song =>
-                    song.Genre != null &&
+                    !string.IsNullOrWhiteSpace(song.Genre) &&
                     song.Genre.Equals(
-                        preferredGenre,
+                        preference,
                         StringComparison.OrdinalIgnoreCase))
                 .ToList();
         }
     }
 }
+

@@ -1,4 +1,5 @@
-﻿using MusicBox.Models;
+﻿
+using MusicBox.Models;
 
 namespace MusicBox.Services.Recommendations
 {
@@ -7,8 +8,10 @@ namespace MusicBox.Services.Recommendations
     // song recommendation strategies.
     public interface IRecommendationStrategy
     {
+        string Name { get; }
+
         List<Song> Recommend(
             List<Song> songs,
-            string preferredGenre);
+            string preference);
     }
 }

@@ -21,8 +21,8 @@ namespace MusicBox
 );
             builder.Services.AddControllersWithViews();
             builder.Services.AddScoped<ISongRepository, SongRepository>();
-            builder.Services.AddScoped<GenreRecommendationStrategy>();
-            builder.Services.AddScoped<ArtistRecommendationStrategy>();
+            builder.Services.AddScoped<IRecommendationStrategy, GenreRecommendationStrategy>();
+            builder.Services.AddScoped<IRecommendationStrategy, ArtistRecommendationStrategy>();
             builder.Services.AddDbContext<MusicBoxDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("MusicBoxConnection")));
